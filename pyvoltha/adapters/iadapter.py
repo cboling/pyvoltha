@@ -27,7 +27,6 @@ from .interface import IAdapterInterface
 from voltha_protos.adapter_pb2 import Adapter
 from voltha_protos.adapter_pb2 import AdapterConfig
 from voltha_protos.common_pb2 import AdminState
-from voltha_protos.common_pb2 import LogLevel
 from voltha_protos.device_pb2 import DeviceType, DeviceTypes
 from voltha_protos.health_pb2 import HealthStatus
 
@@ -47,7 +46,11 @@ class IAdapter(object):
                  version,
                  device_type, vendor_id,
                  accepts_bulk_flow_update=True,
-                 accepts_add_remove_flow_updates=False):
+                 accepts_add_remove_flow_updates=False,
+                 endpoint=None,
+                 current_replica=1,
+                 total_replicas=1,
+                 adapter_type=None):
         log.debug(
             'Initializing adapter: {} {} {}'.format(vendor, name, version))
         self.core_proxy = core_proxy
@@ -67,7 +70,11 @@ class IAdapter(object):
             id=self.name,
             vendor=vendor,
             version=version,
-            config=AdapterConfig(log_level=LogLevel.INFO)
+            config=AdapterConfig(),
+            currentReplica=current_replica,
+            totalReplicas=total_replicas,
+            endpoint=endpoint,
+            type=adapter_type or name
         )
         self.devices_handlers = dict()  # device_id -> Olt/OnuHandler()
         self.device_handler_class = device_handler_class
@@ -228,9 +235,15 @@ class OltAdapter(IAdapter):
                  device_handler_class,
                  name,
                  vendor,
-                 version, device_type,
+                 version,
+                 device_type,
                  accepts_bulk_flow_update=True,
-                 accepts_add_remove_flow_updates=False):
+                 accepts_add_remove_flow_updates=False,
+                 endpoint=None,
+                 current_replica=1,
+                 total_replicas=1,
+                 adapter_type=None):
+
         super(OltAdapter, self).__init__(core_proxy=core_proxy,
                                          adapter_proxy=adapter_proxy,
                                          config=config,
@@ -241,7 +254,11 @@ class OltAdapter(IAdapter):
                                          device_type=device_type,
                                          vendor_id=None,
                                          accepts_bulk_flow_update=accepts_bulk_flow_update,
-                                         accepts_add_remove_flow_updates=accepts_add_remove_flow_updates)
+                                         accepts_add_remove_flow_updates=accepts_add_remove_flow_updates,
+                                         endpoint=endpoint,
+                                         current_replica=current_replica,
+                                         total_replicas=total_replicas,
+                                         adapter_type=adapter_type)
         self.logical_device_id_to_root_device_id = dict()
 
     def reconcile_device(self, device):
@@ -308,7 +325,12 @@ class OnuAdapter(IAdapter):
                  device_type,
                  vendor_id,
                  accepts_bulk_flow_update=True,
-                 accepts_add_remove_flow_updates=False):
+                 accepts_add_remove_flow_updates=False,
+                 endpoint=None,
+                 current_replica=1,
+                 total_replicas=1,
+                 adapter_type=None):
+
         super(OnuAdapter, self).__init__(core_proxy=core_proxy,
                                          adapter_proxy=adapter_proxy,
                                          config=config,
@@ -319,7 +341,11 @@ class OnuAdapter(IAdapter):
                                          device_type=device_type,
                                          vendor_id=vendor_id,
                                          accepts_bulk_flow_update=accepts_bulk_flow_update,
-                                         accepts_add_remove_flow_updates=accepts_add_remove_flow_updates)
+                                         accepts_add_remove_flow_updates=accepts_add_remove_flow_updates,
+                                         endpoint=endpoint,
+                                         current_replica=current_replica,
+                                         total_replicas=total_replicas,
+                                         adapter_type=adapter_type)
 
     def reconcile_device(self, device):
         self.devices_handlers[device.id] = self.device_handler_class(self,

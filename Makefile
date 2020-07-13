@@ -52,7 +52,7 @@ upload: dist
 VENVDIR := venv-pyvoltha
 
 venv: local-protos
-	virtualenv --python=python3.6 ${VENVDIR};\
+	VIRTUAL_ENV_DISABLE_PROMPT=true virtualenv --python=python3.6 ${VENVDIR};\
     source ./${VENVDIR}/bin/activate ; set -u ;\
     pip install -r requirements.txt
 ifdef LOCAL_PROTOS

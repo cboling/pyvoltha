@@ -86,3 +86,27 @@ class TwistedEtcdStore(object):
         deferred.addCallback(success)
         deferred.addErrback(failure)
         return deferred
+
+    def delete_prefix(self, prefix):
+
+        def success(results):
+            if results:
+                return results
+            else:
+                return False
+
+        def failure(exception):
+            raise exception
+
+        if prefix is not None and len(prefix) > 0:
+            prefix = self.make_path(prefix)
+        else:
+            # Deleting a range of keys with a prefix
+            prefix = self._path_prefix
+            while prefix[-1:] == '/':
+                prefix = prefix[:-1]
+
+        deferred = threads.deferToThread(self._etcd.delete_prefix, prefix)
+        deferred.addCallback(success)
+        deferred.addErrback(failure)
+        return deferred

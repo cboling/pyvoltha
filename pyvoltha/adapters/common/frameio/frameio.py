@@ -38,7 +38,7 @@ import select
 import structlog
 import sys
 
-from scapy.data import ETH_P_ALL
+#from scapy.data import ETH_P_ALL
 from twisted.internet import reactor
 from zope.interface import implementer
 
@@ -57,7 +57,7 @@ log = structlog.get_logger()
 
 def hexify(frame):
     """Return a hexadecimal string encoding of input buffer"""
-    return codecs.encode(bytes(frame),'hex')
+    return bytes(frame).hex()
 
 
 class _SelectWakerDescriptor(object):
@@ -80,7 +80,7 @@ class _SelectWakerDescriptor(object):
 
     def notify(self):
         """Trigger a select loop"""
-        os.write(self.pipe_write, '\x00')
+        os.write(self.pipe_write, b'\x00')
 
 
 class BpfProgramFilter(object):
@@ -169,7 +169,7 @@ class FrameIOPort(object):
 
         log.debug('frame-received', iface=self.iface_name, len=len(frame),
                   hex=hexify(frame))
-        self.received +=1
+        self.received += 1
         dispatched = False
         for proxy in self.proxies:
             if proxy.filter is None or proxy.filter(frame):
@@ -192,8 +192,10 @@ class FrameIOPort(object):
     def send_frame(self, frame):
         try:
             return self.socket.send(frame)
+
         except socket.error as err:
-            if err.args[0] == os.errno.EINVAL:
+            import errno
+            if err.args[0] == errno.EINVAL:
                 if len(frame) < self.MIN_PKT_SIZE:
                     padding = '\x00' * (self.MIN_PKT_SIZE - len(frame))
                     frame = frame + padding
@@ -238,8 +240,8 @@ class DarwinFrameIOPort(FrameIOPort):
     def open_socket(self, iface_name):
         sin = pcapdnet.open_pcap(iface_name, 1600, 1, 100)
         try:
-            fcntl.ioctl(sin.fileno(), BIOCIMMEDIATE, struct.pack("I",1))
-        except:
+            fcntl.ioctl(sin.fileno(), BIOCIMMEDIATE, struct.pack("I", 1))
+        except Exception as _e:
             pass
 
         return sin
@@ -295,7 +297,7 @@ class FrameIOManager(Thread):
     on a set of network interfaces.
     """
     def __init__(self):
-        super(FrameIOManager, self).__init__()
+        super(FrameIOManager, self).__init__(name='FrameIO')
 
         self.ports = {}  # iface_name -> ActiveFrameReceiver
         self.queue = {}  # iface_name -> TODO
@@ -353,8 +355,8 @@ class FrameIOManager(Thread):
         if port is None:
             port = _FrameIOPort(iface_name)
             self.ports[iface_name] = port
-            self.ports_changed = True
-            self.waker.notify()
+            # self.ports_changed = True
+            # self.waker.notify()
 
         proxy = FrameIOPortProxy(port, callback, filter, name)
         port.add_proxy(proxy)

@@ -1,7 +1,7 @@
 PyYAML==3.12
 Twisted==19.10.0
-argparse==1.2.1
-arrow==0.10.0
+argparse==1.4.0
+arrow==0.15.7
 bitstring==3.1.5
 confluent-kafka==0.11.5
 docker-py==1.10.6
@@ -9,13 +9,13 @@ etcd3==0.11.1
 future==0.18.2
 jsonpatch==1.16
 netaddr==0.7.19
-pcapy==0.11.1
+pcapy==0.11.4
 protobuf==3.7.0
 python-consul==0.6.2
 scapy==2.4.3
 simplejson==3.12.0
 six==1.12.0
 structlog==19.2.0
-transitions==0.6.4
+transitions==0.8.2
 txaioetcd==0.3.0
 voltha-protos==3.3.9

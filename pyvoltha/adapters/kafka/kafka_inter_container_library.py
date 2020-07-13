@@ -244,12 +244,12 @@ class IKafkaMessagingProxy(object):
         try:
             self.kafka_proxy.unsubscribe(topic,
                                          self._enqueue_received_group_message)
-
-            if callback is None and target_cls is None:
-                log.error("both-call-and-target-cls-cannot-be-none",
-                          topic=topic)
-                raise KafkaMessagingError(
-                    error="both-call-and-target-cls-cannot-be-none")
+            # Both are None on device delete...
+            # if callback is None and target_cls is None:
+            #     log.error("both-call-and-target-cls-cannot-be-none",
+            #               topic=topic)
+            #     raise KafkaMessagingError(
+            #         error="both-call-and-target-cls-cannot-be-none")
 
             if target_cls is not None and topic in self.topic_target_cls_map:
                 del self.topic_target_cls_map[topic]
@@ -376,8 +376,9 @@ class IKafkaMessagingProxy(object):
             response.header.type = MessageType.Value("RESPONSE")
             response.header.from_topic = msg_header.to_topic
             response.header.to_topic = msg_header.from_topic
-            if msg_body is not None:
-                response_body.result.Pack(msg_body)
+            body = msg_body.result if isinstance(msg_body, Deferred) else msg_body
+            if body is not None:
+                response_body.result.Pack(body)
             response_body.success = status
             response.body.Pack(response_body)
             return response
@@ -397,7 +398,7 @@ class IKafkaMessagingProxy(object):
                 log.debug("unsupported-msg", msg_type=type(message.body))
                 return None
             log.debug("parsed-response", type=message.header.type, from_topic=message.header.from_topic,
-                  to_topic=message.header.to_topic, transaction_id=message.header.id)
+                      to_topic=message.header.to_topic, transaction_id=message.header.id)
             return resp
         except Exception as e:
             log.exception("parsing-response-failed", msg=msg, e=e)
